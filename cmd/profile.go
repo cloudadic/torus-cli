@@ -21,6 +21,14 @@ func init() {
 		Category: "ACCOUNT",
 		Subcommands: []cli.Command{
 			{
+				Name:  "view",
+				Usage: "View your profile",
+				Action: chain(
+					ensureDaemon, ensureSession, loadDirPrefs, loadPrefDefaults,
+					setUserEnv, profileView,
+				),
+			},
+			{
 				Name:  "update",
 				Usage: "Update your profile",
 				Action: chain(
@@ -31,6 +39,33 @@ func init() {
 		},
 	}
 	Cmds = append(Cmds, profile)
+}
+
+// profileView is used to view your account profile
+func profileView(ctx *cli.Context) error {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	client := api.NewClient(cfg)
+	c := context.Background()
+
+	session, err := client.Session.Who(c)
+	if err != nil {
+		return errs.NewErrorExitError("Error fetching user details", err)
+	}
+	if session.Type() == apitypes.MachineSession {
+		return errs.NewExitError("Machines do not have profiles")
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 2, 0, 1, ' ', 0)
+	fmt.Fprintf(w, "Name:\t%s\n", session.Name())
+	fmt.Fprintf(w, "Email:\t%s\n", session.Email())
+	fmt.Fprintf(w, "Username:\t%s\n\n", session.Username())
+	w.Flush()
+
+	return nil
 }
 
 // profileEdit is used to update name and email for an account

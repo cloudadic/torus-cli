@@ -70,7 +70,7 @@ func NewEngine(sess session.Session) *Engine {
 // Seal encrypts the plaintext pt bytes with triplesec-v3 using a key derived
 // via blake2b from the user's master key and a nonce (returned).
 func (e *Engine) Seal(ctx context.Context, pt []byte) ([]byte, []byte, error) {
-	mk, err := e.unsealMasterKey(ctx)
+	mk, err := e.UnsealMasterKey(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -109,7 +109,7 @@ func (e *Engine) Seal(ctx context.Context, pt []byte) ([]byte, []byte, error) {
 // Unseal decrypts the ciphertext ct, encrypted with triplesec-v3, using the
 // a key derived via blake2b from the user's master key and the provided nonce.
 func (e *Engine) Unseal(ctx context.Context, ct, nonce []byte) ([]byte, error) {
-	mk, err := e.unsealMasterKey(ctx)
+	mk, err := e.UnsealMasterKey(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -467,9 +467,9 @@ func (e *Engine) SignedEnvelope(ctx context.Context, body identity.Immutable,
 	}, nil
 }
 
-// unsealMasterKey uses the scrypt stretched password to decrypt the master
+// UnsealMasterKey uses the scrypt stretched password to decrypt the master
 // password, which is encrypted with triplesec-v3
-func (e *Engine) unsealMasterKey(ctx context.Context) ([]byte, error) {
+func (e *Engine) UnsealMasterKey(ctx context.Context) ([]byte, error) {
 	ts, err := newTriplesec(ctx, []byte(e.sess.Passphrase()))
 	if err != nil {
 		return nil, err

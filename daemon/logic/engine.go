@@ -479,3 +479,14 @@ func (e *Engine) GenerateKeypair(ctx context.Context, notifier *observer.Notifie
 
 	return nil
 }
+
+// ChangePassword returns the new password object and re-encrypted masterkey object
+func (e *Engine) ChangePassword(ctx context.Context, newPassword string) (*primitive.UserPassword, *primitive.MasterKey, error) {
+	// We need to re-use the master key
+	currentMasterKey, err := e.crypto.UnsealMasterKey(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Encrypt the new password and re-encrypt the original master key
+	return crypto.EncryptPasswordObject(ctx, newPassword, &currentMasterKey)
+}
